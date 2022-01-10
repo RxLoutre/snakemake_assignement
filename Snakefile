@@ -1,7 +1,7 @@
 rule bowtie2_map:
   input:
-    index
-    R1 = "/Users/roxaneboyer/Bioinformatic/data/vUMC/rawdata/{sample}_R1.fastq"
+    index,
+    R1 = "/Users/roxaneboyer/Bioinformatic/data/vUMC/rawdata/{sample}_R1.fastq",
     R2 = "/Users/roxaneboyer/Bioinformatic/data/vUMC/rawdata/{sample}_R2.fastq"
   output:
     align_bam = "/Users/roxaneboyer/Bioinformatic/data/vUMC/mapped_reads/{sample}.bam"
