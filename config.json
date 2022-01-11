@@ -1,0 +1,8 @@
+{
+    "threads" : 8,
+    "ressources" : "/Users/roxaneboyer/Bioinformatic/ressources/references-database/Homo_sapiens_HG19",
+    "index" : "/index/bowtie2/GCF_000001405.39_GRCh38.p13_genomic",
+    "reference" : "/genome/GCF_000001405.39_GRCh38.p13_genomic.fna",
+    "rawdata" : "/Users/roxaneboyer/Bioinformatic/data/vUMC/rawdata/",
+    "output" : "/Users/roxaneboyer/Bioinformatic/data/vUMC/nice_otter/"
+}
