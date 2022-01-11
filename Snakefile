@@ -6,7 +6,7 @@
 
 ## --- Config and variables --- #
 
-genome_reference = "/Users/roxaneboyer/Bioinformatic/ressources/references-database/Homo_sapiens_HG19/genome/GCF_000001405.39_GRCh38.p13_genomic.fna"
+REFERENCE = "/Users/roxaneboyer/Bioinformatic/ressources/references-database/Homo_sapiens_HG19/genome/GCF_000001405.39_GRCh38.p13_genomic.fna"
 
 ## --- Help Rules --- #
 
@@ -36,10 +36,10 @@ rule bowtie2_map:
 ## bam2cram          : Copy the bam alignement into cram format
 rule bam2cram:
   input:
-    align_bam = "/Users/roxaneboyer/Bioinformatic/data/vUMC/mapped_reads/{sample}.bam"
-    genome_reference
+    align_bam = "/Users/roxaneboyer/Bioinformatic/data/vUMC/mapped_reads/{sample}.bam",
+    genome_reference = REFERENCE
   output:
-    align_cram = "mapped_reads/{sample}.cram"
+    align_cram = "/Users/roxaneboyer/Bioinformatic/data/vUMC/mapped_reads/{sample}.cram"
   shell:
     """
     samtools view -C -T {input.genome_reference} -o {output.align_cram} {input.align_bam}
