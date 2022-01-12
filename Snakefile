@@ -12,15 +12,15 @@ INDEX = RESSOURCES + config['index']
 THREADS = config['threads']
 RAWDATA = config['rawdata']
 OUTPUT = config['output']
-
-
-SAMPLES = ["NA12878-ERATPLUS-10GB_L002"]
+ANNOTATION = config['annotation']
+SAMPLES = config['samples']
 
 # --- Rules --- #
 
 rule all:
     input:
         align_cram = expand(OUTPUT + "mapped_reads/{sample}.cram",sample = SAMPLES)
+        covstats = expand(OUTPUT + "stats/{sample}_covstats.csv",sample = SAMPLES)
 
 ## help               : Prints help comments for Snakefile
 rule help:
@@ -44,7 +44,8 @@ rule bowtie2_map:
     """
     bowtie2 -p {params.threads} -x {params.index} -1 {input.R1} -2 {input.R2} | samtools view -Sb - > {output.align_bam}
     """
-## bam2cram          : Copy the bam alignement into cram format
+
+## bam2cram           : Copy the bam alignement into cram format
 rule bam2cram:
   input:
     align_bam = expand(OUTPUT + "mapped_reads/{sample}.bam",sample = SAMPLES),
@@ -56,4 +57,16 @@ rule bam2cram:
     samtools view -C -T {input.genome_reference} -o {output.align_cram} {input.align_bam}
     """
 
-  
+## coverage_stat      : Produce basic coverage statistics per gene on extended exonic regions
+##                      Extended = 6nt upstream and downstrem of each exon
+rule coverage_stat:
+  input:
+    align_bam = expand(OUTPUT + "mapped_reads/{sample}.bam",sample = SAMPLES),
+    genome_reference = REFERENCE,
+    annotation = ANNOTATION
+  output:
+    covstats = expand(OUTPUT + "stats/{sample}_covstats.csv",sample = SAMPLES)
+  shell:
+  """
+
+  """

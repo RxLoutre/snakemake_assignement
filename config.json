@@ -3,6 +3,9 @@
     "ressources" : "/Users/roxaneboyer/Bioinformatic/ressources/references-database/Homo_sapiens_HG19",
     "index" : "/index/bowtie2/GCF_000001405.39_GRCh38.p13_genomic",
     "reference" : "/genome/GCF_000001405.39_GRCh38.p13_genomic.fna",
+    "annotation" : "/annotation/RefSeq_exons_6nt_up_down_GRCh18.bed",
     "rawdata" : "/Users/roxaneboyer/Bioinformatic/data/vUMC/rawdata/",
-    "output" : "/Users/roxaneboyer/Bioinformatic/data/vUMC/nice_otter/"
+    "output" : "/Users/roxaneboyer/Bioinformatic/data/vUMC/nice_otter/",
+    "samples" : "NA12878-ERATPLUS-10GB_L002",
+    "sample_test" : "NA12878-ERATPLUS-10GB_L002"
 }
