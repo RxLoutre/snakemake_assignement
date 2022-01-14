@@ -8,10 +8,11 @@ Purpose : Calculate coverage statistic aggregated
 
 # -------- Imports -------- #
 import argparse
-import csv
+import traceback
+from csv import reader
 
 # -------- Classes -------- #
-class bedcov_hist:
+class Bedcov_hist:
     def __init__(self,depth,nbOcc,pctQuery):
         self.depth = depth
         self.nbOcc = nbOcc
@@ -21,23 +22,25 @@ class bedcov_hist:
         s = str(self.depth) + " " +  str(self.nbOcc) + " " +  str(self.pctQuery)
         return s
 
-class gene_cov_info:
-    def __init__(self,name,querySize,listRecords):
+class Gene_cov_info:
+    def __init__(self,name,querySize):
         self.name = name
         self.querySize = querySize
-        self.listRecords = listRecords
-        self.nbRecords = len(listRecords)
+        self.listRecords = []
 
     def __str__(self):
         s = "Gene name : " + str(self.name) +\
-            "\nSize extended exon" + str(self.querySize) +\
-            "\nNb records : " + str(self.nbRecords)
+            "\nSize of match : " + str(self.querySize) +\
+            "\nNb records : " + str(len(self.listRecords))
         return s
+
+    def add_record(self,record):
+        self.listRecords.append(record)
 
     def show_records(self):
         s = ""
-        for x in range(self.nbRecords):
-            s += str(self.listRecords[x])
+        for x in range(len(self.listRecords)):
+            s += str(self.listRecords[x]) + "\n"
         return s
 
 def get_arguments():
@@ -64,15 +67,30 @@ ______________________________________________________________________
 	return (parser.parse_args())
 
 def read_bedcov(input):
+    genes_info = {}
     try:
         with open(input, 'r') as f:
-            csv_reader = csv.reader(f, delimiter='\t')
-            
-            
-            line = f.readline()
+            csv_reader = reader(f, delimiter='\t')
+            for row in csv_reader:
+                c_gene_name = row[3]
+                c_depth = row[8]
+                c_nbocc = row[9]
+                c_querysize = row[10]
+                c_pctquery = row[11]
+                c_record = Bedcov_hist(c_depth,c_nbocc,c_pctquery)
+                c_gene_cov_info = Gene_cov_info(c_gene_name,c_querysize)
+                if not c_gene_name in genes_info:
+                    genes_info[c_gene_name] = c_gene_cov_info
+                genes_info[c_gene_name].add_record(c_record)
     except Exception as e :
         print('Uh oh, something went wrong there :(. More details below')
-        print(e, exc_info=True)
+        traceback.print_exc()
         raise
     finally:
         f.close()
+        return genes_info
+
+test_file = "/Users/roxaneboyer/Bioinformatic/data/vUMC/nice_otter/NA12878_ERATPLUS_10GB.refseq.bedcov.test"
+dict = read_bedcov(test_file)
+print(dict["DDX11L1:NR_046018.2"])
+print(dict["DDX11L1:NR_046018.2"].show_records())
