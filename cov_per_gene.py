@@ -10,10 +10,10 @@ Purpose : Calculate coverage statistic aggregated
 import argparse
 import traceback
 import math
-from csv import reader
+import csv
 
 # -------- Classes -------- #
-class Bedcov_hist_records:
+class Hist_record:
     def __init__(self,depth,nbOcc,pctQuery):
         self.depth = depth
         self.nbOcc = nbOcc
@@ -71,44 +71,68 @@ ______________________________________________________________________
 	parser.add_argument("-o", "--output", help="The output file in csv format, each field seperated by a coma", required=True)
 	return (parser.parse_args())
 
-def read_bedcov(input):
-    genes_info = {}
+def read_bedcov(input,output):
+    current_gene_name = ""
+    current_section = (0,0)
+    current_section_size = 0
+    cumulated_cov = 0
+    mean = 0
+    pct30x = 0
+    cumulated_base_30x = 0
     try:
-        with open(input, 'r') as f:
-            csv_reader = reader(f, delimiter='\t')
+        with open(input, 'r') as inp_file, open(output, 'w') as out:
+            csv_reader = csv.reader(inp_file, delimiter='\t')
+            writer = csv.writer(out, delimiter='\t')
+            writer.writerow(['GeneName','MeanCoverage','PCT30X'])
             for row in csv_reader:
-                c_gene_name = row[3]
-                c_depth = row[8]
-                c_nbocc = row[9]
-                c_querysize = row[10]
-                c_pctquery = row[11]
-                c_record = Bedcov_hist_records(c_depth,c_nbocc,c_pctquery)
-                c_gene_cov_info = Gene_cov_info(c_querysize)
-                if not c_gene_name in genes_info.keys():
-                    print("Gene "+c_gene_name+" not in dic for now.")
-                    genes_info[c_gene_name] = []
-                    genes_info[c_gene_name].append(c_gene_cov_info)
-                    genes_info[c_gene_name][0].add_record(c_record)
-                else:
-                    if not c_gene_cov_info in genes_info[c_gene_name]:
-                        #print("Adding a new entry to key "+c_gene_name+" which is "+str(c_gene_cov_info))
-                        genes_info[c_gene_name].append(c_gene_cov_info)
-                        #print("Now adding record "+str(c_record)+" to list elem nb "+str(len(genes_info[c_gene_name])-1))
-                        genes_info[c_gene_name][len(genes_info[c_gene_name])-1].add_record(c_record)
+                line = csv_reader.line_num
+                #Reading all attributes of this record
+                section = (row[1],row[2])
+                gene_name = row[3]
+                depth = row[8]
+                nbocc = row[9]
+                size = row[10]
+                pctquery = row[11]
+                #Initialize the current gene to the first gene in the table
+                if line == 1:
+                    print("Initializing...")
+                    current_gene_name = gene_name
+                    current_section = section
+                    current_section_size = int(size)
+                    if int(depth) >= 30:
+                        cumulated_base_30x = int(size)
+                #We are parsing through the info of a new gene ! Saving all informations of the previous gene in a file
+                if not gene_name == current_gene_name:
+                    mean = int(int(cumulated_cov) / int(current_section_size))
+                    pct30x = (int(cumulated_base_30x) / int(current_section_size)) * 100
+                    writer.writerow([str(current_gene_name),str(mean),str(pct30x)])
+                    current_gene_name = gene_name
+                    cumulated_cov = int(depth) * int(nbocc)
+                    current_section = section
+                    current_section_size = int(size)
+                    if int(depth) >= 30:
+                        cumulated_base_30x = int(size)
                     else:
-                        #print("Adding a new record to entry "+c_gene_cov_info+" which is "+str(c_record))
-                        genes_info[c_gene_name][len(genes_info[c_gene_name])-1].add_record(c_record)
+                        cumulated_base_30x = 0
+                 #We are still parsing informations from the same gene, keep adding numbers !
+                else:
+                    cumulated_cov += int(depth) * int(nbocc)
+                    #Iw we change section, add the new size
+                    if not section == current_section:
+                        print("Switching to section : {}".format(section))
+                        current_section_size += int(size)
+                        current_section = section
+                        if int(depth) >= 30:
+                            cumulated_base_30x += int(size)
+            writer.writerow([str(current_gene_name),str(mean),str(pct30x)])
     except Exception as e :
         print('Uh oh, something went wrong there :(. More details below')
         traceback.print_exc()
         raise
-    finally:
-        f.close()
-        return genes_info
 
 
-test_file = "/Users/roxaneboyer/Bioinformatic/data/vUMC/nice_otter/NA12878_ERATPLUS_10GB.refseq.bedcov.test"
-dict = read_bedcov(test_file)
-print(len(dict["DDX11L1:NR_046018.2"]))
-print(dict["DDX11L1:NR_046018.2"][0])
+#test_file = "/Users/roxaneboyer/Bioinformatic/data/vUMC/nice_otter/NA12878_ERATPLUS_10GB.refseq.bedcov.BRCA1.test"
+#test_outfile = "/Users/roxaneboyer/Bioinformatic/data/vUMC/nice_otter/NA12878_ERATPLUS_10GB.refseq.bedstats.BRCA1.test"
+#dict = read_bedcov(test_file,test_outfile)
+
 
