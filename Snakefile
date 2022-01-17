@@ -57,16 +57,30 @@ rule bam2cram:
     samtools view -C -T {input.genome_reference} -o {output.align_cram} {input.align_bam}
     """
 
+rule bedtools_coverage:
+## bedtools_coverage   : Start bedtools coverage hist to generate coverage info
+##                       Need first to convert bam alignment to bed
+  input:
+    align_bam = expand(OUTPUT + "mapped_reads/{sample}.bam",sample = SAMPLES),
+    annotation = ANNOTATION
+  output:
+    align_bed = expand(OUTPUT + "mapped_reads/{sample}.bed",sample = SAMPLES)
+    hist_info = expand(OUTPUT + "stats/{sample}.refseq.bedcov",sample = SAMPLES)
+  shell:
+  """
+  bedtools bamtobed -i {input.align_bam} > {output.align_bed}
+  betools coverage -hist -a {input.annotation} -b {output.align_bed} > {output.hist_info}
+  """
+
+
 ## coverage_stat      : Produce basic coverage statistics per gene on extended exonic regions
 ##                      Extended = 6nt upstream and downstrem of each exon
 rule coverage_stat:
   input:
-    align_bam = expand(OUTPUT + "mapped_reads/{sample}.bam",sample = SAMPLES),
-    genome_reference = REFERENCE,
-    annotation = ANNOTATION
+    hist_info = expand(OUTPUT + "stats/{sample}.refseq.bedcov",sample = SAMPLES)
   output:
     covstats = expand(OUTPUT + "stats/{sample}_covstats.csv",sample = SAMPLES)
   shell:
   """
-
+  python cov_per_gene.py -i {input.hist_info} -o {output.covstats}
   """
